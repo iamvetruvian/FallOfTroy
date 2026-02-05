@@ -36,7 +36,7 @@ if getattr(sys, '_MEIPASS', None):
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-BUNDLED_PROFILES_DIR = os.path.join(BASE_DIR, "bundled_profiles")
+BUNDLED_PROFILES_DIR = os.path.join(BASE_DIR, "usr/share/bundled_profiles")
 
 CONFIG_DIR = os.path.expanduser("~/.config/project_daemon")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")

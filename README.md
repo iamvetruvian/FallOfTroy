@@ -14,7 +14,7 @@ A powerful project initialization and management tool for developers. FallOfTroy
 
 ### Required
 - **Linux** (x86_64)
-- **Python 3.11+** (bundled in AppImage)
+- **Python 3.7+** - The AppImage uses your system's Python installation
 - **Git** - for version control features
 - **GitHub CLI (`gh`)** - for GitHub repository creation
   ```bash

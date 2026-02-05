@@ -1,0 +1,7 @@
+======================================
+FallOfTroy AppImage Build Script
+======================================
+
+Cleaning previous build...
+Extracting Python runtime...
+build-appimage.sh: line 43: ./python3.11-x86_64.AppImage: Permission denied
