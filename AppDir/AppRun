@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e
+
+# AppRun script for FallOfTroy AppImage
+# This script sets up the environment and launches the application
+
+HERE="$(dirname "$(readlink -f "${0}")")"
+
+# Export AppImage-specific environment variables
+export APPDIR="${HERE}"
+export APPIMAGE="${APPIMAGE:-}"
+
+# Add bundled Python to PATH
+export PATH="${HERE}/usr/bin:${PATH}"
+
+# Set Python path to include bundled libraries
+export PYTHONPATH="${HERE}/usr/lib/python3/site-packages:${PYTHONPATH:-}"
+
+# Set library path
+export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH:-}"
+
+# Disable PySide6 Qt platform plugin debug output
+export QT_LOGGING_RULES="*.debug=false"
+
+# Launch the application
+exec "${HERE}/usr/bin/python3" "${HERE}/usr/bin/FallOfTroy.py" "$@"

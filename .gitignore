@@ -1,0 +1,28 @@
+# Build artifacts
+AppDir/usr/lib/
+AppDir/usr/bin/python3
+*.AppImage
+python*.AppImage
+appimagetool-*.AppImage
+squashfs-root/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

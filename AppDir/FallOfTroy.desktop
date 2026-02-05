@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=FallOfTroy
+GenericName=Project Daemon
+Comment=A project initialization and management tool
+Exec=FallOfTroy
+Icon=FallOfTroy
+Categories=Development;Utility;
+Terminal=false
+StartupNotify=true
