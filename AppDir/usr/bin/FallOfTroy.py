@@ -19,7 +19,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTextEdit,
     QDialog,
-    QMessageBox
+    QMessageBox,
+    QGroupBox
 )
 
 from PySide6.QtWidgets import QCheckBox, QRadioButton, QButtonGroup
@@ -65,6 +66,25 @@ def run_command(command, cwd, parent_widget, error_title):
         )
         return False
 
+
+import shutil
+
+def detect_installed_editors():
+    candidates = [
+        ("VS Code", "code"),
+        ("Zed", "zeditor"),
+        ("Cursor", "cursor"),
+        ("PyCharm", "pycharm"),
+        ("Antigravity", "antigravity"),
+    ]
+
+    available = []
+
+    for name, cmd in candidates:
+        if shutil.which(cmd):
+            available.append((name, cmd))
+
+    return available
 
 def show_loading_dialog(parent, message):
     dialog = QDialog(parent)
@@ -146,6 +166,7 @@ def load_config():
         config = json.load(f)
 
     config.setdefault("profile_git_prefs", {})
+    config.setdefault("preferred_editor", None)
     config.setdefault("hide_profile_warning", False)
 
 
@@ -466,9 +487,13 @@ def execute_profile(
     save_config(config)
 
     try:
-        subprocess.Popen(
-            ["zeditor", project_path, os.path.join(project_path, "index.html")]
-        )
+        editor_cmd = config.get("preferred_editor")
+
+        if editor_cmd:
+            try:
+                subprocess.Popen([editor_cmd, project_path])
+            except Exception:
+                pass
     except Exception:
         pass
 
@@ -600,6 +625,47 @@ def main():
     #         "Debug",
     #         f"Profiles dir:\n{PROFILES_DIR}"
     #     )
+
+    # Display options to choose IDE (or select an IDE by default):
+    editor_group_box = QGroupBox("Choose Editor")
+    editor_layout = QVBoxLayout(editor_group_box)
+
+    editor_button_group = QButtonGroup()
+    editor_buttons = {}
+
+    available_editors = detect_installed_editors()
+
+    for name, cmd in available_editors:
+        radio = QRadioButton(name)
+        editor_layout.addWidget(radio)
+        editor_button_group.addButton(radio)
+        editor_buttons[cmd] = radio
+
+    new_tab_layout.addWidget(editor_group_box)
+
+    preferred = config.get("preferred_editor")
+
+    # 1. If previously selected exists → use it
+    if preferred in editor_buttons:
+        editor_buttons[preferred].setChecked(True)
+
+    # 2. Else if VS Code exists → default to it
+    elif "code" in editor_buttons:
+        editor_buttons["code"].setChecked(True)
+
+    # 3. Else pick first available
+    elif available_editors:
+        first_cmd = available_editors[0][1]
+        editor_buttons[first_cmd].setChecked(True)
+    
+    def on_editor_selected():
+        for cmd, btn in editor_buttons.items():
+            if btn.isChecked():
+                config["preferred_editor"] = cmd
+                save_config(config)
+                break
+
+    editor_button_group.buttonClicked.connect(on_editor_selected)
 
     # GitHub options
     git_checkbox = QCheckBox("Create a GitHub repository")
@@ -760,9 +826,13 @@ def main():
         path = projects[match]
 
         try:
-            subprocess.Popen(
-                ["zeditor", path, os.path.join(path, "index.html")]
-            )
+            editor_cmd = config.get("preferred_editor")
+
+            if editor_cmd:
+                try:
+                    subprocess.Popen([editor_cmd, project_path])
+                except Exception:
+                    pass
             QApplication.quit()
         except Exception:
             QMessageBox.warning(window, "Error", "Failed to open editor.")
