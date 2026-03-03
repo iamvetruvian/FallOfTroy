@@ -626,46 +626,45 @@ def main():
     #         f"Profiles dir:\n{PROFILES_DIR}"
     #     )
 
-    # Display options to choose IDE (or select an IDE by default):
-    editor_group_box = QGroupBox("Choose Editor")
-    editor_layout = QVBoxLayout(editor_group_box)
+    # Display options to choose IDE (or select an IDE by default) for both tabs
+    def make_editor_selector():
+        box = QGroupBox("Choose Editor")
+        lay = QVBoxLayout(box)
+        group = QButtonGroup()
+        buttons = {}
 
-    editor_button_group = QButtonGroup()
-    editor_buttons = {}
+        for name, cmd in detect_installed_editors():
+            radio = QRadioButton(name)
+            lay.addWidget(radio)
+            group.addButton(radio)
+            buttons[cmd] = radio
 
-    available_editors = detect_installed_editors()
+        # pick default based on config
+        preferred = config.get("preferred_editor")
+        if preferred in buttons:
+            buttons[preferred].setChecked(True)
+        elif "code" in buttons:
+            buttons["code"].setChecked(True)
+        elif buttons:
+            # pick first available command
+            next(iter(buttons.values())).setChecked(True)
 
-    for name, cmd in available_editors:
-        radio = QRadioButton(name)
-        editor_layout.addWidget(radio)
-        editor_button_group.addButton(radio)
-        editor_buttons[cmd] = radio
+        def on_selected():
+            for cmd, btn in buttons.items():
+                if btn.isChecked():
+                    config["preferred_editor"] = cmd
+                    save_config(config)
+                    break
+        group.buttonClicked.connect(on_selected)
 
+        return box, buttons, group
+
+    # create once and add to both tab layouts
+    editor_group_box, editor_buttons, editor_button_group = make_editor_selector()
     new_tab_layout.addWidget(editor_group_box)
-
-    preferred = config.get("preferred_editor")
-
-    # 1. If previously selected exists → use it
-    if preferred in editor_buttons:
-        editor_buttons[preferred].setChecked(True)
-
-    # 2. Else if VS Code exists → default to it
-    elif "code" in editor_buttons:
-        editor_buttons["code"].setChecked(True)
-
-    # 3. Else pick first available
-    elif available_editors:
-        first_cmd = available_editors[0][1]
-        editor_buttons[first_cmd].setChecked(True)
-    
-    def on_editor_selected():
-        for cmd, btn in editor_buttons.items():
-            if btn.isChecked():
-                config["preferred_editor"] = cmd
-                save_config(config)
-                break
-
-    editor_button_group.buttonClicked.connect(on_editor_selected)
+    # clone for existing tab so user can change independently if needed
+    existing_editor_box, _, _ = make_editor_selector()
+    existing_tab_layout.addWidget(existing_editor_box)
 
     # GitHub options
     git_checkbox = QCheckBox("Create a GitHub repository")
@@ -830,7 +829,7 @@ def main():
 
             if editor_cmd:
                 try:
-                    subprocess.Popen([editor_cmd, project_path])
+                    subprocess.Popen([editor_cmd, path])
                 except Exception:
                     pass
             QApplication.quit()
